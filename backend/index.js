@@ -7,7 +7,12 @@ const app = express()
 const prisma = new PrismaClient();
 
 app.use(express.json());
-app.use(cors())
+app.use(
+  cors({
+    origin: 'https://meme-mine.onrender.com/',
+    credentials: true,
+  })
+);
 
 app.get('/', (req,res)=>{
     res.send("Backend is running...")
