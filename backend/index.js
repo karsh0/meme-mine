@@ -9,6 +9,10 @@ const prisma = new PrismaClient();
 app.use(express.json());
 app.use(cors())
 
+app.get('/', (req,res)=>{
+    res.send("Backend is running...")
+})
+
 app.post('/image', async(req,res)=>{
     const {imageUrl, title} = req.body;
 
