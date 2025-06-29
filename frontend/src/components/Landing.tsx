@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Card } from "./Card";
 import { Navbar } from "./Navbar";
 import { motion } from "framer-motion";
-import { CircleArrowOutDownRight } from "lucide-react";
+import { CircleArrowOutDownRight, Loader2 } from "lucide-react";
 
 interface AllImages {
   id: string;
@@ -13,14 +13,17 @@ interface AllImages {
 export const Landing = () => {
   const [images, setImages] = useState<AllImages[]>([]);
   const [search, setSearch] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [filteredImages, setFilteredImages] = useState<AllImages[]>([]);
 
   useEffect(() => {
     (async () => {
       try {
+        setLoading(true)
         const res = await fetch(import.meta.env.VITE_API_URL);
         const data = await res.json();
         setImages(data.images);
+        setLoading(false)
       } catch (err) {
         console.error("Error fetching images:", err);
       }
@@ -78,12 +81,14 @@ export const Landing = () => {
             />
           </div>
         </section>
+        {loading ? <Loader2 className="mx-auto my-30 w-16 h-16 animate-spin transition duration-200" /> :
+          <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {(search ? filteredImages : images).map((i) => (
+              <Card key={i.id} imageUrl={i.imageUrl} title={i.title} />
+            ))}
+          </section>
 
-        <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {(search ? filteredImages : images).map((i) => (
-            <Card key={i.id} imageUrl={i.imageUrl} title={i.title} />
-          ))}
-        </section>
+        }
       </main>
     </div>
   );

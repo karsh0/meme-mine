@@ -185,7 +185,7 @@ export const MemeGenerator = () => {
         transition={{ repeat: Infinity, duration: 7, ease: "easeInOut" }}
       />
 
-      <h2 className="text-3xl md:text-5xl text-gray-800 font-semibold font-['Poppins'] text-center mb-5 md:mb-16 z-10 relative">
+      <h2 className="text-3xl md:text-5xl font-semibold font-['Poppins'] text-center mb-5 md:mb-16 z-10 relative">
         Create Your Meme
       </h2>
 
@@ -197,7 +197,7 @@ export const MemeGenerator = () => {
           />
           <canvas
             ref={canvasRef}
-            className="rounded-lg shadow-lg max-w-full w-[320px] h-[320px] sm:w-[400px] sm:h-[400px]"
+            className="rounded-lg shadow-lg max-w-full w-[320px] h-[320px] sm:w-[400px] sm:h-[380px]"
           />
         </div>
 
@@ -205,7 +205,7 @@ export const MemeGenerator = () => {
           <div className="flex flex-col sm:flex-row w-full gap-2">
             <input
               type="text"
-              placeholder="Text 1"
+              placeholder="Text"
               value={text}
               onChange={(e) => setText(e.target.value)}
               className="p-2 w-full bg-neutral-700 border border-gray-600 rounded-lg placeholder:text-white text-white focus:outline-none focus:ring-1"

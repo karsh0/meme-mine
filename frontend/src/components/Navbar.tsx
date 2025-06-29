@@ -1,4 +1,3 @@
-import { MoveUpRight } from "lucide-react";
 import React from "react";
 
 export const Navbar = () => {
@@ -8,7 +7,7 @@ export const Navbar = () => {
 
       <div className="flex gap-3">
         <a className="px-4 py-2 flex gap-1 font-medium text-white bg-zinc-700 cursor-pointer rounded-lg transition"
-        href="https://github.com/karsh0">
+        href="https://github.com/karsh0/meme-mine">
           ⭐ Star on GitHub 
         </a>
       </div>
