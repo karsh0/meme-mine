@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 
 export const MemeGenerator = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [fontSize, setFontSize] = useState<string>("27");
   const [texts, setTexts] = useState<textsType[]>([])
   const [text, setText] = useState<string>("");
   const [imageObj, setImageObj] = useState<HTMLImageElement | null>(null);
@@ -30,6 +31,26 @@ export const MemeGenerator = () => {
     height: number
   }
 
+  useEffect(() => {
+    if (!fontSize || !canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const size = parseInt(fontSize, 10);
+    ctx.font = `bold ${size}px Poppins`;
+
+    const updatedTexts = texts.map((t) => ({
+      ...t,
+      width: ctx.measureText(t.text).width,
+      height: size,
+    }));
+
+    setTexts(updatedTexts);
+  }, [fontSize]);
+
+
   function draw() {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -43,7 +64,10 @@ export const MemeGenerator = () => {
       ctx.drawImage(imageObj, 0, 0, canvas.width, canvas.height)
     }
 
-    ctx.font = "bold 27px Poppins";
+    const textSize = parseInt(fontSize, 10);
+
+
+    ctx.font = `bold ${textSize}px Poppins`;
     ctx.letterSpacing = "1px"
     ctx.lineWidth = 2;
     ctx.strokeStyle = "black";
@@ -69,10 +93,6 @@ export const MemeGenerator = () => {
     if (imageObj) {
       ctx.drawImage(imageObj, 0, 0, canvas.width, canvas.height)
     }
-
-    ctx.font = "16px Poppins";
-    ctx.textAlign = "left";
-
     draw()
 
     let startX;
@@ -85,40 +105,97 @@ export const MemeGenerator = () => {
     offsetX = rect.left + window.scrollX
     offsetY = rect.top + window.scrollY
 
-    function getHittest(x, y, index) {
-      let text = texts[index]
-      return (x >= text.x && x <= text.x + text.width && y >= text.y - text.height && y <= text.y);
+    function getHittest(x: number, y: number, index: number): boolean {
+      const text = texts[index];
+      const textSize = parseInt(fontSize || "27", 10);
+
+      const left = text.x;
+      const right = text.x + text.width;
+      const top = text.y - textSize;
+      const bottom = text.y;
+
+      return x >= left && x <= right && y >= top && y <= bottom;
     }
 
-    canvas.addEventListener("mousedown", (e) => {
-      e.preventDefault()
-      startX = e.clientX - offsetX
-      startY = e.clientY - offsetY
 
+    canvas.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+
+      const mouseX = e.clientX - offsetX;
+      const mouseY = e.clientY - offsetY;
+
+      let hit = false;
       for (let i = 0; i < texts.length; i++) {
-        if (getHittest(startX, startY, i)) {
+        if (getHittest(mouseX, mouseY, i)) {
           selectedIndex = i;
+          startX = mouseX;
+          startY = mouseY;
+          hit = true;
+          break;
         }
       }
 
-    })
+      if (!hit) {
+        selectedIndex = -1;
+      }
+    });
 
-    canvas.addEventListener("mouseup", (e) => {
-      e.preventDefault()
+
+    canvas.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+
+      const touchX = e.touches[0].clientX - offsetX;
+      const touchY = e.touches[0].clientY - offsetY;
+
       selectedIndex = -1;
-    })
 
-    canvas.addEventListener("mouseout", (e) => {
-      e.preventDefault()
+      for (let i = 0; i < texts.length; i++) {
+        if (getHittest(touchX, touchY, i)) {
+          selectedIndex = i;
+          startX = touchX;
+          startY = touchY;
+          break;
+        }
+      }
+    });
+
+    canvas.addEventListener("touchmove", (e) => {
+      e.preventDefault();
+
+      if (selectedIndex < 0) return;
+
+      const touchX = e.touches[0].clientX - offsetX;
+      const touchY = e.touches[0].clientY - offsetY;
+
+      const dx = touchX - startX;
+      const dy = touchY - startY;
+
+      startX = touchX;
+      startY = touchY;
+
+      const updated = [...texts];
+      updated[selectedIndex].x += dx;
+      updated[selectedIndex].y += dy;
+      setTexts(updated);
+      draw();
+    });
+
+
+
+    function endDrag() {
       selectedIndex = -1;
-    })
+    }
 
-    canvas.addEventListener("mousemove", (e) => {
+    canvas.addEventListener("mouseup", endDrag)
+
+    canvas.addEventListener("mouseout", endDrag)
+
+    function drag(clientX: number, clientY: number) {
       if (selectedIndex < 0) return
-      e.preventDefault()
 
-      const mouseX = e.clientX - offsetX
-      const mouseY = e.clientY - offsetY
+
+      const mouseX = clientX - offsetX
+      const mouseY = clientY - offsetY
 
       const dx = mouseX - startX
       const dy = mouseY - startY
@@ -130,10 +207,17 @@ export const MemeGenerator = () => {
 
       text.x += dx
       text.y += dy
+    }
+
+    canvas.addEventListener("mousemove", (e) => {
+      e.preventDefault()
+      drag(e.clientX, e.clientY)
       draw()
     })
 
-  }, [texts, imageObj, color])
+
+
+  }, [texts, imageObj, color, fontSize])
 
 
   function AddText() {
@@ -143,19 +227,21 @@ export const MemeGenerator = () => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const y = texts.length * 20 + 20;
+    const size = parseInt(fontSize || "27", 10);
+    ctx.font = `bold ${size}px Poppins`;
 
     const value = {
       text: text,
-      x: 20,
-      y,
+      x: 120,
+      y: texts.length * 30 + 35,
       width: ctx.measureText(text).width,
-      height: 17
-    }
+      height: size,
+    };
 
-    setTexts(prev => [...prev, value])
-    setText("")
+    setTexts(prev => [...prev, value]);
+    setText("");
   }
+
 
   const Download = () => {
     const canvas = canvasRef.current;
@@ -185,7 +271,7 @@ export const MemeGenerator = () => {
         transition={{ repeat: Infinity, duration: 7, ease: "easeInOut" }}
       />
 
-      <h2 className="text-3xl md:text-5xl font-semibold font-['Poppins'] text-center mb-5 md:mb-16 z-10 relative">
+      <h2 className="text-3xl md:text-5xl font-semibold font-['Poppins'] text-center mb-5 md:mb-16 z-10 relative text-gray-800">
         Create Your Meme
       </h2>
 
@@ -229,6 +315,10 @@ export const MemeGenerator = () => {
                 onClick={() => setColor(clr)}
               ></div>
             ))}
+          </div>
+
+          <div className="w-full">
+            <input type="range" className="w-full" value={fontSize} onChange={(e) => setFontSize(e.target.value)} />
           </div>
 
           <button
