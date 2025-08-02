@@ -2,41 +2,25 @@ import React, { useEffect, useState } from "react";
 import { Card } from "./Card";
 import { Navbar } from "./Navbar";
 import { motion } from "framer-motion";
-import { CircleArrowOutDownRight, Loader2 } from "lucide-react";
-
-interface AllImages {
-  id: string;
-  imageUrl: string;
-  title: string;
-}
+import { CircleArrowOutDownRight } from "lucide-react";
+import { templates } from "../../data/templates";
+import { Template } from "../../types/template";
 
 export const Landing = () => {
-  const [images, setImages] = useState<AllImages[]>([]);
-  const [search, setSearch] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [filteredImages, setFilteredImages] = useState<AllImages[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredImages, setFilteredImages] = useState<Template[] | []>([]);
 
   useEffect(() => {
-    (async () => {
-      try {
-        setLoading(true)
-        const res = await fetch(import.meta.env.VITE_API_URL);
-        const data = await res.json();
-        setImages(data.images);
-        setLoading(false)
-      } catch (err) {
-        console.error("Error fetching images:", err);
-      }
-    })();
-  }, []);
+    const filtered = Object.entries(templates)
+      .filter(([key]) => key.toLowerCase().includes(searchQuery.toLowerCase()))
+      .map(([key, value]) => ({
+        title: key,
+        image: value.image,
+      }));
 
-  function FilterContents(value: string) {
-    setFilteredImages(
-      images.filter((i) =>
-        i.title.toLowerCase().includes(value.toLowerCase())
-      )
-    );
-  }
+    setFilteredImages(filtered);
+  }, [searchQuery]);
+
 
   return (
     <div className="relative w-full min-h-screen bg-gray-200 text-gray-800">
@@ -49,7 +33,7 @@ export const Landing = () => {
         <Navbar />
       </div>
 
-      <main className="max-w-5xl mx-auto px-4 py-5 md:py-16">
+      <main className="max-w-6xl mx-auto px-4 py-5 md:py-16">
         <section className="text-center py-16 sm:py-20">
           <div className="text-4xl sm:text-5xl md:text-7xl font-['poppins'] font-semibold tracking-tight leading-[1.1] text-center">
             <span className="">Generate Memes in</span>
@@ -65,14 +49,7 @@ export const Landing = () => {
             <input
               type="text"
               placeholder="Search template"
-              onChange={(e) => {
-                if (e.target.value !== "") {
-                  setSearch(true);
-                  FilterContents(e.target.value);
-                } else {
-                  setSearch(false);
-                }
-              }}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pr-12 px-5 py-3 bg-zinc-900 text-white placeholder:text-gray-400 border border-zinc-700 rounded-full"
             />
             <CircleArrowOutDownRight
@@ -81,14 +58,17 @@ export const Landing = () => {
             />
           </div>
         </section>
-        {loading ? <Loader2 className="mx-auto my-30 w-16 h-16 animate-spin transition duration-200" /> :
-          <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {(search ? filteredImages : images).map((i) => (
-              <Card key={i.id} imageUrl={i.imageUrl} title={i.title} />
-            ))}
-          </section>
-
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-5">
+          {
+          (searchQuery.length > 0 ? filteredImages : Object.entries(templates).map(([key, tpl]) => ({
+            title: key,
+            image: tpl.image,
+          }))).map((tpl) => (
+            <Card key={tpl.title} imageUrl={tpl.image} title={tpl.title} />
+          ))
         }
+        </div>
+
       </main>
     </div>
   );

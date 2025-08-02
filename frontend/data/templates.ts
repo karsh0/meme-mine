@@ -1,0 +1,20 @@
+export const templates = {
+    "harkirat":{
+        image:"./temp1.jpg"
+    },
+    "distracted-boyfriend":{
+        image:"./temp2.jpg"
+    },
+    "disaster-girl":{
+        image:"./temp3.jpg"
+    },
+    "butterfly":{
+        image:"./temp4.jpg"
+    },
+    "kiddy":{
+        image:"./temp5.jpg"
+    },
+    "ballons":{
+        image:"./temp6.jpg"
+    },
+}

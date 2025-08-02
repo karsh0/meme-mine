@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useImage } from "../providers/image-provider";
 import { MoveLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useSelected } from "../../hooks/useSelected";
 
 export const MemeGenerator = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -11,15 +11,15 @@ export const MemeGenerator = () => {
   const [text, setText] = useState<string>("");
   const [imageObj, setImageObj] = useState<HTMLImageElement | null>(null);
   const [color, setColor] = useState<string>("white");
-  const { image } = useImage();
   const navigate = useNavigate();
+  const { selectedImage } = useSelected();
 
   useEffect(() => {
-    if (!image) return;
+    if (!selectedImage) return;
 
     const img = new Image();
     img.crossOrigin = "anonymous";
-    img.src = image;
+    img.src = selectedImage;
     img.onload = () => setImageObj(img);
   }, []);
 
