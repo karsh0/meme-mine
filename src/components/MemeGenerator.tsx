@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { MoveLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { ImageIcon, MoveLeft, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 import { useSelected } from "../../hooks/useSelected";
 
@@ -11,8 +10,16 @@ export const MemeGenerator = () => {
   const [text, setText] = useState<string>("");
   const [imageObj, setImageObj] = useState<HTMLImageElement | null>(null);
   const [color, setColor] = useState<string>("white");
-  const navigate = useNavigate();
-  const { selectedImage } = useSelected();
+  const { selectedImage, setSelectedImage } = useSelected();
+  const uploadRef = useRef<HTMLInputElement | null>(null)
+  const [uploadImage, setUploadImage] = useState<string | null>(null)
+  const [uploadImageObj, setUploadImageObj] = useState<HTMLImageElement | null>(null)
+  const [uploadImagePosition, setUploadImagePosition] = useState({ x: 0, y: 0 });
+
+
+
+  useEffect(() => {
+  }, [uploadImagePosition])
 
   useEffect(() => {
     if (!selectedImage) return;
@@ -22,6 +29,15 @@ export const MemeGenerator = () => {
     img.src = selectedImage;
     img.onload = () => setImageObj(img);
   }, []);
+
+  const updateUploadObj = (uploadImage: string) => {
+    if (!uploadImage) return;
+
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = uploadImage;
+    img.onload = () => setUploadImageObj(img);
+  }
 
   type textsType = {
     text: string,
@@ -64,6 +80,10 @@ export const MemeGenerator = () => {
       ctx.drawImage(imageObj, 0, 0, canvas.width, canvas.height)
     }
 
+    if (uploadImageObj) {
+      ctx.drawImage(uploadImageObj, uploadImagePosition.x, uploadImagePosition.y, 100, 100);
+    }
+
     const textSize = parseInt(fontSize, 10);
 
 
@@ -100,6 +120,8 @@ export const MemeGenerator = () => {
     let offsetX;
     let offsetY;
     let selectedIndex = -1;
+    let isDraggingUploadImage = false;
+
 
     const rect = canvas.getBoundingClientRect()
     offsetX = rect.left + window.scrollX
@@ -117,6 +139,18 @@ export const MemeGenerator = () => {
       return x >= left && x <= right && y >= top && y <= bottom;
     }
 
+    function isOnUploadImage(x: number, y: number): boolean {
+  const width = 100;
+  const height = 100;
+
+  const left = uploadImagePosition.x;
+  const right = uploadImagePosition.x + width;
+  const top = uploadImagePosition.y;
+  const bottom = uploadImagePosition.y + height;
+
+  return x >= left && x <= right && y >= top && y <= bottom;
+}
+
 
     canvas.addEventListener("mousedown", (e) => {
       e.preventDefault();
@@ -124,20 +158,21 @@ export const MemeGenerator = () => {
       const mouseX = e.clientX - offsetX;
       const mouseY = e.clientY - offsetY;
 
-      let hit = false;
-      for (let i = 0; i < texts.length; i++) {
-        if (getHittest(mouseX, mouseY, i)) {
-          selectedIndex = i;
-          startX = mouseX;
-          startY = mouseY;
-          hit = true;
-          break;
+      if (isOnUploadImage(mouseX, mouseY)) {
+        isDraggingUploadImage = true;
+        startX = mouseX;
+        startY = mouseY;
+      } else {
+        for (let i = 0; i < texts.length; i++) {
+          if (getHittest(mouseX, mouseY, i)) {
+            selectedIndex = i;
+            startX = mouseX;
+            startY = mouseY;
+            break;
+          }
         }
       }
 
-      if (!hit) {
-        selectedIndex = -1;
-      }
     });
 
 
@@ -181,33 +216,41 @@ export const MemeGenerator = () => {
     });
 
 
-
     function endDrag() {
       selectedIndex = -1;
+      isDraggingUploadImage = false;
     }
+
 
     canvas.addEventListener("mouseup", endDrag)
 
     canvas.addEventListener("mouseout", endDrag)
 
     function drag(clientX: number, clientY: number) {
-      if (selectedIndex < 0) return
+      const mouseX = clientX - offsetX;
+      const mouseY = clientY - offsetY;
 
+      const dx = mouseX - startX;
+      const dy = mouseY - startY;
 
-      const mouseX = clientX - offsetX
-      const mouseY = clientY - offsetY
+      startX = mouseX;
+      startY = mouseY;
 
-      const dx = mouseX - startX
-      const dy = mouseY - startY
+      if (isDraggingUploadImage) {
+        setUploadImagePosition((pos) => ({
+          x: pos.x + dx,
+          y: pos.y + dy,
+        }));
+      } else if (selectedIndex >= 0) {
+        const updated = [...texts];
+        updated[selectedIndex].x += dx;
+        updated[selectedIndex].y += dy;
+        setTexts(updated);
+      }
 
-      startX = mouseX
-      startY = mouseY
-
-      let text = texts[selectedIndex]
-
-      text.x += dx
-      text.y += dy
+      draw();
     }
+
 
     canvas.addEventListener("mousemove", (e) => {
       e.preventDefault()
@@ -217,7 +260,7 @@ export const MemeGenerator = () => {
 
 
 
-  }, [texts, imageObj, color, fontSize])
+  }, [texts, imageObj, color, fontSize, uploadImageObj, uploadImagePosition])
 
 
   function AddText() {
@@ -254,53 +297,60 @@ export const MemeGenerator = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-gray-200 text-black px-4 sm:px-8 lg:px-20 xl:px-40 py-10 sm:py-20 overflow-hidden">
-      <motion.div
-        className="absolute -top-20 -left-20 w-40 h-40 sm:w-60 sm:h-60 md:w-[300px] md:h-[300px] rounded-full bg-indigo-500 opacity-30 blur-3xl z-0"
-        animate={{ x: [0, 100, 0], y: [0, 100, 0] }}
-        transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
-      />
-      <motion.div
-        className="absolute top-0 right-0 w-32 h-32 sm:w-48 sm:h-48 md:w-[250px] md:h-[250px] rounded-full bg-pink-500 opacity-20 blur-3xl z-0"
-        animate={{ x: [0, -80, 0], y: [0, 80, 0] }}
-        transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
-      />
-      <motion.div
-        className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-28 h-28 sm:w-44 sm:h-44 md:w-[200px] md:h-[200px] rounded-full bg-blue-500 opacity-20 blur-3xl z-0"
-        animate={{ y: [0, -60, 0] }}
-        transition={{ repeat: Infinity, duration: 7, ease: "easeInOut" }}
-      />
-
-      <h2 className="text-3xl md:text-5xl font-semibold font-['Poppins'] text-center mb-5 md:mb-16 z-10 relative text-gray-800">
-        Create Your Meme
-      </h2>
-
+    <div className="relative text-black px-4 sm:px-8 lg:px-20 xl:px-40 py-10 sm:py-20 overflow-hidden">
       <div className="flex flex-col lg:flex-row gap-10 lg:gap-20 items-center justify-center max-w-6xl mx-auto flex-wrap z-10 relative">
         <div className="flex flex-col gap-7 items-center">
-          <MoveLeft
+          <motion.div
+            whileHover={{ x: -5 }}
+            transition={{ duration: 0.2 }}
             className="cursor-pointer self-start"
-            onClick={() => navigate("/")}
-          />
+          >
+            <MoveLeft
+              onClick={() => setSelectedImage("")}
+            />
+          </motion.div>
           <canvas
             ref={canvasRef}
-            className="rounded-lg shadow-lg max-w-full w-[320px] h-[320px] sm:w-[400px] sm:h-[380px]"
+            className="max-w-full w-[320px] h-[320px] sm:w-[400px] sm:h-[380px]"
           />
         </div>
 
         <div className="w-full md:max-w-sm flex flex-col gap-4">
+          <div 
+            className="text-white bg-neutral-700 rounded-md w-fit p-2 text-sm cursor-pointer flex gap-1"
+            onClick={() => uploadRef.current?.click()}>
+              <ImageIcon className="w-5 h-5"/>
+            Upload image
+            <input type="file" ref={uploadRef} className="hidden" onChange={(e) => {
+              const selectedFile = e.target.files;
+
+              if (!selectedFile) {
+                return
+              }
+              const reader = new FileReader();
+
+              reader.onload = () => {
+                const base64 = reader.result as string;
+                setUploadImage(base64);
+                updateUploadObj(base64)
+              };
+
+              reader.readAsDataURL(selectedFile[0]);
+            }} />
+          </div>
           <div className="flex flex-col sm:flex-row w-full gap-2">
             <input
               type="text"
               placeholder="Text"
               value={text}
               onChange={(e) => setText(e.target.value)}
-              className="p-2 w-full bg-neutral-700 border border-gray-600 rounded-lg placeholder:text-white text-white focus:outline-none focus:ring-1"
+              className="p-2 w-full bg-neutral-800 border border-gray-600 rounded-md placeholder:text-white text-white focus:outline-none focus:ring-1"
             />
             <button
-              className="sm:w-auto sm:px-6 h-11 bg-neutral-700 hover:bg-neutral-800 rounded-lg text-white cursor-pointer"
+              className="p-2 w-fit bg-neutral-800 rounded-md text-white cursor-pointer"
               onClick={AddText}
             >
-              Add
+              <Plus />
             </button>
           </div>
 
@@ -323,7 +373,7 @@ export const MemeGenerator = () => {
 
           <button
             onClick={Download}
-            className="bg-green-600 hover:bg-green-700 transition text-white py-2 px-4 rounded-lg cursor-pointer"
+            className="bg-green-700 hover:bg-green-800 transition text-white py-2 px-4 rounded-lg cursor-pointer"
           >
             Download Meme
           </button>

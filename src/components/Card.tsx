@@ -11,10 +11,9 @@ export const Card = ({imageUrl, title}: { imageUrl: string, title: string}) => {
       className="flex flex-col items-center rounded-3xl overflow-hidden cursor-pointer group transition-all duration-200"
       onClick={() => {
         setSelectedImage(imageUrl)
-        navigate("/meme");
       }}
     >
-      <div className="rounded-2xl overflow-hidden w-36 h-36 md:w-52 md:h-52">
+      <div className="rounded-2xl overflow-hidden w-40 h-40 md:w-52 md:h-52">
         <img
           src={imageUrl}
           alt="Meme Thumbnail"
