@@ -371,12 +371,19 @@ export const MemeGenerator = () => {
             <input type="range" className="w-full" value={fontSize} onChange={(e) => setFontSize(e.target.value)} />
           </div>
 
-          <button
+          <div className="w-full flex gap-4">
+            <button
             onClick={Download}
-            className="bg-green-700 hover:bg-green-800 transition text-white py-2 px-4 rounded-lg cursor-pointer"
+            className="w-full bg-green-700 hover:bg-green-800 transition text-white py-2 px-4 rounded-lg cursor-pointer"
           >
-            Download Meme
+            Download
           </button>
+          <button
+            className="w-full transition text-black text-sm border py-2 px-4 rounded-lg cursor-pointer"
+          >
+            Copy
+          </button>
+          </div>
         </div>
       </div>
     </div>
