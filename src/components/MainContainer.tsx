@@ -5,8 +5,6 @@ import { templates } from "../../data/templates";
 import { useSelected } from "../../hooks/useSelected";
 import type { Template } from "types/template";
 export const MainContainer = () => {
-
-
     const [searchQuery, setSearchQuery] = useState('');
     const [filteredImages, setFilteredImages] = useState<Template[] | []>([]);
     const customRef = useRef<HTMLInputElement | null>(null)
@@ -27,7 +25,7 @@ export const MainContainer = () => {
 
 
     return <main className="max-w-6xl mx-auto px-3 py-5 md:py-16">
-        <section className="text-center py-16 md:py-20">
+        <section className="text-center px-6 py-16 md:py-20">
             <div className="text-4xl md:text-7xl font-['poppins'] font-semibold tracking-tight leading-[1.1] text-center">
                 <span className="">Generate Memes in</span>
                 <br />
@@ -43,7 +41,7 @@ export const MainContainer = () => {
                     type="text"
                     placeholder="Search template"
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pr-12 px-5 py-3 bg-zinc-900 text-white placeholder:text-gray-400 border border-zinc-700 rounded-full"
+                    className="w-full pr-12 px-5 py-2 md:py-3 bg-zinc-900 text-white placeholder:text-gray-400 border border-zinc-700 rounded-full"
                 />
                 <CircleArrowOutDownRight
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
@@ -51,7 +49,7 @@ export const MainContainer = () => {
                 />
             </div>
         </section>
-        <div className="bg-neutral-700 text-white text-sm font-semibold w-fit rounded-lg px-3 py-2 flex gap-2 mb-2 cursor-pointer"
+        <div className="bg-neutral-700 text-white text-sm font-semibold w-fit rounded-lg p-1 md:px-3 md:py-2 flex gap-2 mb-2 cursor-pointer"
 
             onClick={() => {
                 customRef.current?.click()

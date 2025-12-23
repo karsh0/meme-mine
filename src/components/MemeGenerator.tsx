@@ -134,6 +134,14 @@ export const MemeGenerator = () => {
     const offsetX = rect.left + window.scrollX;
     const offsetY = rect.top + window.scrollY;
 
+    function getOffset() {
+      const rect = canvas!.getBoundingClientRect();
+      return {
+        x: rect.left + window.scrollX,
+        y: rect.top + window.scrollY,
+      };
+    }
+
     function getHittest(x: number, y: number, index: number): boolean {
       const t = texts[index];
       if (!t) return false;
@@ -214,22 +222,109 @@ export const MemeGenerator = () => {
       });
 
     }
+    function handleTouchStart(e: TouchEvent) {
+      e.preventDefault();
+
+      const touch = e.touches[0];
+      if (!touch) return;
+
+      const offset = getOffset();
+      const touchX = touch.clientX - offset.x;
+      const touchY = touch.clientY - offset.y;
+
+      let found = false;
+      for (let i = texts.length - 1; i >= 0; i--) {
+        if (getHittest(touchX, touchY, i)) {
+          draggingIndexRef.current = i;
+          setSelectedIndex(i);
+          isDraggingRef.current = true;
+          startRef.current = { x: touchX, y: touchY };
+          found = true;
+
+          // Update editor style to match selected text
+          const selectedText = texts[i];
+          if (!selectedText) return;
+          setEditorStyle({
+            color: selectedText.color,
+            outlineColor: selectedText.outline,
+            fontSize: selectedText.size.toString(),
+            fontWeight: selectedText.weight,
+            textCase: selectedText.textCase,
+          });
+          break;
+        }
+      }
+
+      if (!found) {
+        setSelectedIndex(-1);
+      }
+    }
+
+    function handleTouchMove(e: TouchEvent) {
+      e.preventDefault();
+
+      if (!isDraggingRef.current) return;
+
+      const idx = draggingIndexRef.current;
+      if (idx < 0) return;
+
+      const touch = e.touches[0];
+      if (!touch) return;
+
+      const offset = getOffset();
+      const touchX = touch.clientX - offset.x;
+      const touchY = touch.clientY - offset.y;
+
+      const dx = touchX - startRef.current.x;
+      const dy = touchY - startRef.current.y;
+
+      startRef.current = { x: touchX, y: touchY };
+
+      setTexts(prev => {
+        if (idx < 0 || idx >= prev.length) return prev;
+
+        const updated = [...prev];
+        const item = updated[idx];
+        if (!item) return prev;
+
+        updated[idx] = {
+          ...item,
+          x: item.x + dx,
+          y: item.y + dy,
+        };
+
+        return updated;
+      });
+
+    }
 
     function endDrag() {
       isDraggingRef.current = false;
       draggingIndexRef.current = -1;
     }
 
+    // Add mouse event listeners
     canvas.addEventListener("mousedown", handleMouseDown);
     canvas.addEventListener("mousemove", handleMouseMove);
     canvas.addEventListener("mouseup", endDrag);
     canvas.addEventListener("mouseleave", endDrag);
+
+    // Add touch event listeners
+    canvas.addEventListener("touchstart", handleTouchStart, { passive: false });
+    canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
+    canvas.addEventListener("touchend", endDrag);
+    canvas.addEventListener("touchcancel", endDrag);
 
     return () => {
       canvas.removeEventListener("mousedown", handleMouseDown);
       canvas.removeEventListener("mousemove", handleMouseMove);
       canvas.removeEventListener("mouseup", endDrag);
       canvas.removeEventListener("mouseleave", endDrag);
+
+      canvas.removeEventListener("touchstart", handleTouchStart);
+      canvas.removeEventListener("touchmove", handleTouchMove);
+      canvas.removeEventListener("touchend", endDrag);
+      canvas.removeEventListener("touchcancel", endDrag);
     };
   }, [texts, imageObj]);
 
@@ -273,6 +368,7 @@ export const MemeGenerator = () => {
     link.click();
   };
 
+
   const CopyToClipboard = async () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -298,7 +394,7 @@ export const MemeGenerator = () => {
     }
   };
   return (
-    <div className="flex text-black px-4 sm:px-8 lg:px-20 xl:px-40 py-10 sm:py-20">
+    <div className="flex text-black px-4 py-2 md:py-20">
       <div className="flex flex-col lg:flex-row gap-10 lg:gap-20 items-center justify-center max-w-8xl mx-auto flex-wrap z-10 relative">
         <div className="flex flex-col gap-7 items-center">
           <motion.div
@@ -388,9 +484,9 @@ export const MemeGenerator = () => {
 
               <button
                 className="py-2
-                px-2
+                px-4
             md:px-4
-            w-full
+            w-fit
             sm:w-auto
           bg-neutral-800
             rounded-md
@@ -413,6 +509,7 @@ export const MemeGenerator = () => {
             </button>
             <button
               className="w-full bg-blue-500 hover:bg-blue-600 transition text-white text-sm border py-2 px-4 rounded-lg cursor-pointer"
+              onClick={CopyToClipboard}
             >
               Copy
             </button>
