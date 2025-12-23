@@ -1,13 +1,9 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card } from "./Card";
-import { Navbar } from "./Navbar";
-import { motion } from "framer-motion";
 import { CircleArrowOutDownRight, Upload } from "lucide-react";
 import { templates } from "../../data/templates";
-import { Template } from "../../types/template";
 import { useSelected } from "../../hooks/useSelected";
-import { MemeGenerator } from "./MemeGenerator";
-
+import type { Template } from "types/template";
 export const MainContainer = () => {
 
 
@@ -77,7 +73,7 @@ export const MainContainer = () => {
                     setSelectedImage(base64);
                 };
 
-                reader.readAsDataURL(selectedFile[0]);
+                reader.readAsDataURL(selectedFile[0]!);
             }} />
         </div>
         <div className="grid grid-cols-2 gap-2 md:grid-cols-5 md:gap-4">

@@ -1,25 +1,41 @@
-import React, { useEffect, useRef, useState } from "react";
-import { ImageIcon, MoveLeft, Plus } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { MoveLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { useSelected } from "../../hooks/useSelected";
+import { TextEditor } from "./TextEditor";
+
+export type TextsType = {
+  text: string
+  x: number
+  y: number
+  width: number
+  height: number
+  size: number
+  weight: string
+  color: string
+  outline: string
+  textCase: string
+}
 
 export const MemeGenerator = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [fontSize, setFontSize] = useState<string>("27");
-  const [texts, setTexts] = useState<textsType[]>([])
+  const [texts, setTexts] = useState<TextsType[]>([]);
   const [text, setText] = useState<string>("");
   const [imageObj, setImageObj] = useState<HTMLImageElement | null>(null);
-  const [color, setColor] = useState<string>("white");
   const { selectedImage, setSelectedImage } = useSelected();
-  const uploadRef = useRef<HTMLInputElement | null>(null)
-  const [uploadImage, setUploadImage] = useState<string | null>(null)
-  const [uploadImageObj, setUploadImageObj] = useState<HTMLImageElement | null>(null)
-  const [uploadImagePosition, setUploadImagePosition] = useState({ x: 0, y: 0 });
+  const [selectedIndex, setSelectedIndex] = useState<number>(-1);
 
+  const draggingIndexRef = useRef<number>(-1);
+  const isDraggingRef = useRef(false);
+  const startRef = useRef({ x: 0, y: 0 });
 
-
-  useEffect(() => {
-  }, [uploadImagePosition])
+  const [editorStyle, setEditorStyle] = useState({
+    color: "#FFFFFF",
+    outlineColor: "#000000",
+    fontSize: "40",
+    fontWeight: "800",
+    textCase: "uppercase",
+  });
 
   useEffect(() => {
     if (!selectedImage) return;
@@ -28,44 +44,43 @@ export const MemeGenerator = () => {
     img.crossOrigin = "anonymous";
     img.src = selectedImage;
     img.onload = () => setImageObj(img);
-  }, []);
+  }, [selectedImage]);
 
-  const updateUploadObj = (uploadImage: string) => {
-    if (!uploadImage) return;
-
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.src = uploadImage;
-    img.onload = () => setUploadImageObj(img);
-  }
-
-  type textsType = {
-    text: string,
-    x: number,
-    y: number,
-    width: number,
-    height: number
-  }
-
+  // Update selected text when editor style changes
   useEffect(() => {
-    if (!fontSize || !canvasRef.current) return;
+    if (selectedIndex >= 0 && selectedIndex < texts.length) {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
 
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
 
-    const size = parseInt(fontSize, 10);
-    ctx.font = `bold ${size}px Poppins`;
+      const size = parseInt(editorStyle.fontSize || "40", 10);
+      ctx.font = `${editorStyle.fontWeight} ${size}px Poppins`;
 
-    const updatedTexts = texts.map((t) => ({
-      ...t,
-      width: ctx.measureText(t.text).width,
-      height: size,
-    }));
+      setTexts(prev => {
+        if (selectedIndex < 0 || selectedIndex >= prev.length) return prev;
 
-    setTexts(updatedTexts);
-  }, [fontSize]);
+        const updated = [...prev];
+        const item = updated[selectedIndex];
+        if (!item) return prev;
 
+        updated[selectedIndex] = {
+          ...item,
+          size,
+          weight: editorStyle.fontWeight,
+          color: editorStyle.color,
+          outline: editorStyle.outlineColor,
+          textCase: editorStyle.textCase,
+          width: ctx.measureText(item.text).width,
+          height: size,
+        };
+
+        return updated;
+      });
+
+    }
+  }, [editorStyle, selectedIndex]);
 
   function draw() {
     const canvas = canvasRef.current;
@@ -77,26 +92,29 @@ export const MemeGenerator = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (imageObj) {
-      ctx.drawImage(imageObj, 0, 0, canvas.width, canvas.height)
+      ctx.drawImage(imageObj, 0, 0, canvas.width, canvas.height);
     }
 
-    if (uploadImageObj) {
-      ctx.drawImage(uploadImageObj, uploadImagePosition.x, uploadImagePosition.y, 100, 100);
-    }
+    texts.forEach((t, idx) => {
+      ctx.font = `${t.weight} ${t.size}px Poppins`;
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = t.outline;
+      ctx.fillStyle = t.color;
 
-    const textSize = parseInt(fontSize, 10);
+      const content =
+        t.textCase === "uppercase"
+          ? t.text.toUpperCase()
+          : t.text.toLowerCase();
 
+      ctx.strokeText(content, t.x, t.y);
+      ctx.fillText(content, t.x, t.y);
 
-    ctx.font = `bold ${textSize}px Poppins`;
-    ctx.letterSpacing = "1px"
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "black";
-    ctx.fillStyle = color;
-
-
-    texts.forEach((t) => {
-      ctx.strokeText(t.text, t.x, t.y);
-      ctx.fillText(t.text, t.x, t.y);
+      // Draw selection indicator
+      if (idx === selectedIndex) {
+        ctx.strokeStyle = "transparent";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(t.x, t.y - t.size, t.width + 21, t.size);
+      }
     });
   }
 
@@ -110,158 +128,110 @@ export const MemeGenerator = () => {
     canvas.width = 400;
     canvas.height = 400;
 
-    if (imageObj) {
-      ctx.drawImage(imageObj, 0, 0, canvas.width, canvas.height)
-    }
-    draw()
+    draw();
 
-    let startX;
-    let startY;
-    let offsetX;
-    let offsetY;
-    let selectedIndex = -1;
-    let isDraggingUploadImage = false;
-
-
-    const rect = canvas.getBoundingClientRect()
-    offsetX = rect.left + window.scrollX
-    offsetY = rect.top + window.scrollY
+    const rect = canvas.getBoundingClientRect();
+    const offsetX = rect.left + window.scrollX;
+    const offsetY = rect.top + window.scrollY;
 
     function getHittest(x: number, y: number, index: number): boolean {
-      const text = texts[index];
-      const textSize = parseInt(fontSize || "27", 10);
+      const t = texts[index];
+      if (!t) return false;
 
-      const left = text.x;
-      const right = text.x + text.width;
-      const top = text.y - textSize;
-      const bottom = text.y;
+      const left = t.x;
+      const right = t.x + t.width;
+      const top = t.y - t.size;
+      const bottom = t.y;
 
       return x >= left && x <= right && y >= top && y <= bottom;
     }
 
-    function isOnUploadImage(x: number, y: number): boolean {
-  const width = 100;
-  const height = 100;
-
-  const left = uploadImagePosition.x;
-  const right = uploadImagePosition.x + width;
-  const top = uploadImagePosition.y;
-  const bottom = uploadImagePosition.y + height;
-
-  return x >= left && x <= right && y >= top && y <= bottom;
-}
-
-
-    canvas.addEventListener("mousedown", (e) => {
+    function handleMouseDown(e: MouseEvent) {
       e.preventDefault();
 
       const mouseX = e.clientX - offsetX;
       const mouseY = e.clientY - offsetY;
 
-      if (isOnUploadImage(mouseX, mouseY)) {
-        isDraggingUploadImage = true;
-        startX = mouseX;
-        startY = mouseY;
-      } else {
-        for (let i = 0; i < texts.length; i++) {
-          if (getHittest(mouseX, mouseY, i)) {
-            selectedIndex = i;
-            startX = mouseX;
-            startY = mouseY;
-            break;
-          }
-        }
-      }
+      let found = false;
+      for (let i = texts.length - 1; i >= 0; i--) {
+        if (getHittest(mouseX, mouseY, i)) {
+          draggingIndexRef.current = i;
+          setSelectedIndex(i);
+          isDraggingRef.current = true;
+          startRef.current = { x: mouseX, y: mouseY };
+          found = true;
 
-    });
-
-
-    canvas.addEventListener("touchstart", (e) => {
-      e.preventDefault();
-
-      const touchX = e.touches[0].clientX - offsetX;
-      const touchY = e.touches[0].clientY - offsetY;
-
-      selectedIndex = -1;
-
-      for (let i = 0; i < texts.length; i++) {
-        if (getHittest(touchX, touchY, i)) {
-          selectedIndex = i;
-          startX = touchX;
-          startY = touchY;
+          // Update editor style to match selected text
+          const selectedText = texts[i];
+          if (!selectedText) return;
+          setEditorStyle({
+            color: selectedText.color,
+            outlineColor: selectedText.outline,
+            fontSize: selectedText.size.toString(),
+            fontWeight: selectedText.weight,
+            textCase: selectedText.textCase,
+          });
           break;
         }
       }
-    });
 
-    canvas.addEventListener("touchmove", (e) => {
+      if (!found) {
+        setSelectedIndex(-1);
+      }
+    }
+
+    function handleMouseMove(e: MouseEvent) {
       e.preventDefault();
 
-      if (selectedIndex < 0) return;
+      if (!isDraggingRef.current) return;
 
-      const touchX = e.touches[0].clientX - offsetX;
-      const touchY = e.touches[0].clientY - offsetY;
+      const idx = draggingIndexRef.current;
+      if (idx < 0) return;
 
-      const dx = touchX - startX;
-      const dy = touchY - startY;
+      const mouseX = e.clientX - offsetX;
+      const mouseY = e.clientY - offsetY;
 
-      startX = touchX;
-      startY = touchY;
+      const dx = mouseX - startRef.current.x;
+      const dy = mouseY - startRef.current.y;
 
-      const updated = [...texts];
-      updated[selectedIndex].x += dx;
-      updated[selectedIndex].y += dy;
-      setTexts(updated);
-      draw();
-    });
+      startRef.current = { x: mouseX, y: mouseY };
 
+      setTexts(prev => {
+        if (idx < 0 || idx >= prev.length) return prev;
+
+        const updated = [...prev];
+        const item = updated[idx];
+
+        if (!item) return prev;
+
+        updated[idx] = {
+          ...item,
+          x: item.x + dx,
+          y: item.y + dy,
+        };
+
+        return updated;
+      });
+
+    }
 
     function endDrag() {
-      selectedIndex = -1;
-      isDraggingUploadImage = false;
+      isDraggingRef.current = false;
+      draggingIndexRef.current = -1;
     }
 
+    canvas.addEventListener("mousedown", handleMouseDown);
+    canvas.addEventListener("mousemove", handleMouseMove);
+    canvas.addEventListener("mouseup", endDrag);
+    canvas.addEventListener("mouseleave", endDrag);
 
-    canvas.addEventListener("mouseup", endDrag)
-
-    canvas.addEventListener("mouseout", endDrag)
-
-    function drag(clientX: number, clientY: number) {
-      const mouseX = clientX - offsetX;
-      const mouseY = clientY - offsetY;
-
-      const dx = mouseX - startX;
-      const dy = mouseY - startY;
-
-      startX = mouseX;
-      startY = mouseY;
-
-      if (isDraggingUploadImage) {
-        setUploadImagePosition((pos) => ({
-          x: pos.x + dx,
-          y: pos.y + dy,
-        }));
-      } else if (selectedIndex >= 0) {
-        const updated = [...texts];
-        updated[selectedIndex].x += dx;
-        updated[selectedIndex].y += dy;
-        setTexts(updated);
-      }
-
-      draw();
-    }
-
-
-    canvas.addEventListener("mousemove", (e) => {
-      e.preventDefault()
-      drag(e.clientX, e.clientY)
-      draw()
-    })
-
-
-
-  }, [texts, imageObj, color, fontSize, uploadImageObj, uploadImagePosition])
-
+    return () => {
+      canvas.removeEventListener("mousedown", handleMouseDown);
+      canvas.removeEventListener("mousemove", handleMouseMove);
+      canvas.removeEventListener("mouseup", endDrag);
+      canvas.removeEventListener("mouseleave", endDrag);
+    };
+  }, [texts, imageObj]);
 
   function AddText() {
     const canvas = canvasRef.current;
@@ -270,21 +240,28 @@ export const MemeGenerator = () => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const size = parseInt(fontSize || "27", 10);
-    ctx.font = `bold ${size}px Poppins`;
+    if (!text.trim()) return;
 
-    const value = {
+    const size = parseInt(editorStyle.fontSize || "40", 10);
+    ctx.font = `${editorStyle.fontWeight} ${size}px Poppins`;
+
+    const value: TextsType = {
       text: text,
-      x: 120,
-      y: texts.length * 30 + 35,
+      x: 150,
+      y: 200,
       width: ctx.measureText(text).width,
       height: size,
+      size,
+      weight: editorStyle.fontWeight,
+      color: editorStyle.color,
+      outline: editorStyle.outlineColor,
+      textCase: editorStyle.textCase,
     };
 
-    setTexts(prev => [...prev, value]);
+    setTexts((prev) => [...prev, value]);
     setText("");
+    setSelectedIndex(texts.length);
   }
-
 
   const Download = () => {
     const canvas = canvasRef.current;
@@ -296,9 +273,33 @@ export const MemeGenerator = () => {
     link.click();
   };
 
+  const CopyToClipboard = async () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    try {
+      canvas.toBlob(async (blob) => {
+        if (blob) {
+          await navigator.clipboard.write([
+            new ClipboardItem({ "image/png": blob }),
+          ]);
+          alert("Copied to clipboard!");
+        }
+      });
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
+  const DeleteSelected = () => {
+    if (selectedIndex >= 0) {
+      setTexts((prev) => prev.filter((_, idx) => idx !== selectedIndex));
+      setSelectedIndex(-1);
+    }
+  };
   return (
-    <div className="relative text-black px-4 sm:px-8 lg:px-20 xl:px-40 py-10 sm:py-20 overflow-hidden">
-      <div className="flex flex-col lg:flex-row gap-10 lg:gap-20 items-center justify-center max-w-6xl mx-auto flex-wrap z-10 relative">
+    <div className="flex text-black px-4 sm:px-8 lg:px-20 xl:px-40 py-10 sm:py-20">
+      <div className="flex flex-col lg:flex-row gap-10 lg:gap-20 items-center justify-center max-w-8xl mx-auto flex-wrap z-10 relative">
         <div className="flex flex-col gap-7 items-center">
           <motion.div
             whileHover={{ x: -5 }}
@@ -311,12 +312,12 @@ export const MemeGenerator = () => {
           </motion.div>
           <canvas
             ref={canvasRef}
-            className="max-w-full w-[320px] h-[320px] sm:w-[400px] sm:h-[380px]"
+            className="max-w-full"
           />
         </div>
 
-        <div className="w-full md:max-w-sm flex flex-col gap-4">
-          <div 
+        <div className="w-full md:max-w-lg flex flex-col gap-4">
+          {/* <div 
             className="text-white bg-neutral-700 rounded-md w-fit p-2 text-sm cursor-pointer flex gap-1"
             onClick={() => uploadRef.current?.click()}>
               <ImageIcon className="w-5 h-5"/>
@@ -337,52 +338,84 @@ export const MemeGenerator = () => {
 
               reader.readAsDataURL(selectedFile[0]);
             }} />
-          </div>
-          <div className="flex flex-col sm:flex-row w-full gap-2">
-            <input
-              type="text"
-              placeholder="Text"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              className="p-2 w-full bg-neutral-800 border border-gray-600 rounded-md placeholder:text-white text-white focus:outline-none focus:ring-1"
-            />
+          </div> */}
+          {/* <div className="">
             <button
-              className="p-2 w-fit bg-neutral-800 rounded-md text-white cursor-pointer"
-              onClick={AddText}
+              className="py-2
+            px-4
+          bg-neutral-600
+            rounded-md
+            text-white
+            cursor-pointer
+            text-sm
+            flex
+            gap-2
+            justify-between
+            items-center
+          "
+
+          onClick={handleAddText}
             >
-              <Plus />
+              <Plus className="w-4"/>
+              Add Text
             </button>
-          </div>
+          </div> */}
+          <div className="flex flex-col w-full gap-2">
+            <div className="flex justify-between gap-2">
+              <TextEditor
+                editorStyle={editorStyle}
+                setEditorStyle={setEditorStyle}
+              />
 
-          <p className="text-sm text-neutral-600">Add your text and place anywhere.</p>
+              <input
+                type="text"
+                placeholder="Text"
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                className="
+                p-2
+                w-full
+                sm:flex-1
+              bg-neutral-800
+                border border-gray-600
+                rounded-md
+              placeholder:text-white
+              text-white
+                focus:outline-none
+                focus:ring-1
+              "
+              />
 
-          <div className="flex gap-2 flex-wrap">
-            {["white", "black", "red", "green", "blue"].map((clr) => (
-              <div
-                key={clr}
-                className="w-7 h-7 rounded-sm border border-gray-300 cursor-pointer"
-                style={{ backgroundColor: clr }}
-                onClick={() => setColor(clr)}
-              ></div>
-            ))}
-          </div>
-
-          <div className="w-full">
-            <input type="range" className="w-full" value={fontSize} onChange={(e) => setFontSize(e.target.value)} />
+              <button
+                className="py-2
+                px-2
+            md:px-4
+            w-full
+            sm:w-auto
+          bg-neutral-800
+            rounded-md
+            text-white
+            cursor-pointer
+          "
+                onClick={AddText}
+              >
+                Add
+              </button>
+            </div>
           </div>
 
           <div className="w-full flex gap-4">
             <button
-            onClick={Download}
-            className="w-full bg-green-700 hover:bg-green-800 transition text-white py-2 px-4 rounded-lg cursor-pointer"
-          >
-            Download
-          </button>
-          <button
-            className="w-full transition text-black text-sm border py-2 px-4 rounded-lg cursor-pointer"
-          >
-            Copy
-          </button>
+              onClick={Download}
+              className="w-full bg-green-700 hover:bg-green-800 transition text-white py-2 px-4 rounded-lg cursor-pointer"
+            >
+              Download
+            </button>
+            <button
+              className="w-full bg-blue-500 hover:bg-blue-600 transition text-white text-sm border py-2 px-4 rounded-lg cursor-pointer"
+            >
+              Copy
+            </button>
           </div>
         </div>
       </div>

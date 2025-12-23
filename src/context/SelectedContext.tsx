@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 export interface ImageContextType {
   selectedImage: string;
@@ -7,7 +7,7 @@ export interface ImageContextType {
 
 export const SelectedContext = createContext<ImageContextType | undefined>(undefined);
 
-export const SelectedProvider = ({ children }: { children: ReactNode }) => {
+export const SelectedProvider = ({ children }: { children: any }) => {
   const [selectedImage, setSelectedImage] = useState('');
 
   return (

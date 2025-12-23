@@ -1,19 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { Card } from "./Card";
 import { Navbar } from "./Navbar";
 import { motion } from "framer-motion";
-import { CircleArrowOutDownRight } from "lucide-react";
-import { templates } from "../../data/templates";
-import { Template } from "../../types/template";
 import { useSelected } from "../../hooks/useSelected";
 import { MemeGenerator } from "./MemeGenerator";
 import { MainContainer } from "./MainContainer";
 
+
 export const Landing = () => {
-
   const { selectedImage } = useSelected() 
-
-
 
   return (
     <div className="relative w-full min-h-screen bg-gray-200 text-gray-800">
@@ -29,9 +22,7 @@ export const Landing = () => {
 
         selectedImage === "" ? <MainContainer/> : <MemeGenerator/>
 
-      }
-
-      
+      }   
     </div>
   );
 };

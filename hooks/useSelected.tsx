@@ -1,5 +1,6 @@
 import { useContext } from "react";
-import { ImageContextType, SelectedContext } from "../src/context/SelectedContext";
+import { SelectedContext } from "../src/context/SelectedContext";
+import type { ImageContextType } from "../src/context/SelectedContext";
 
 export const useSelected = (): ImageContextType => {
   const context = useContext(SelectedContext);

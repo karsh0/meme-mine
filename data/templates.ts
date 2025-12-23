@@ -68,9 +68,6 @@ export const templates = {
     "math-lady":{
         image:"./temp22.jpg"
     },
-    "girl-on-couch":{
-        image:"./temp23.jpg"
-    },
     "horse hard":{
         image:"./temp24.jpg"
     },
