@@ -20,7 +20,7 @@ export const Card = ({imageUrl, title}: { imageUrl: string, title: string}) => {
         />
       </div>
 
-      <span className="text-black text-xs md:text-lg font-semibold text-center mt-2 px-2 break-words">
+      <span className="text-black text-xs md:text-lg font-bold md:font-semibold text-center mt-2 px-2 break-words">
         {title.replace('-', ' ').replace(/\b\w/g, c => c.toUpperCase())}
       </span>
     </div>

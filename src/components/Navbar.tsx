@@ -2,7 +2,7 @@
 export const Navbar = () => {
   return (
     <nav className="w-full h-16 flex items-center justify-between text-xs md:text-sm font-semibold">
-      <div className="text-lg md:text-lg flex gap-1 items-center">
+      <div className="text-lg font-bold flex gap-1 items-center">
         <span className="text-zinc-800 tracking-tighter">Meme</span>
         <span className="px-3 py-[1px] bg-indigo-500 text-white rounded-lg">mine</span>
       </div>

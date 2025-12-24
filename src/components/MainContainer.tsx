@@ -26,7 +26,7 @@ export const MainContainer = () => {
 
     return <main className="max-w-6xl mx-auto px-3 py-5 md:py-16">
         <section className="text-center px-6 py-16 md:py-20">
-            <div className="text-4xl md:text-7xl font-['poppins'] font-semibold tracking-tight leading-[1.1] text-center">
+            <div className="text-4xl md:text-7xl font-['poppins'] font-bold tracking-tight leading-[1.1] text-center">
                 <span className="">Generate Memes in</span>
                 <br />
                 <span className="text-indigo-500">Seconds</span>
@@ -49,14 +49,14 @@ export const MainContainer = () => {
                 />
             </div>
         </section>
-        <div className="bg-neutral-700 text-white text-sm font-semibold w-fit rounded-lg p-1 md:px-3 md:py-2 flex gap-2 mb-2 cursor-pointer"
+        <div className="bg-neutral-700 text-white text-xs md:text-sm font-semibold w-fit rounded-sm md:rounded-lg p-2 md:px-3 md:py-2 flex gap-2 mb-2 items-center cursor-pointer"
 
             onClick={() => {
                 customRef.current?.click()
             }}
 
         >
-            <Upload className="w-5 h-5" />
+            <Upload className="w-3 h-3 md:w-5 md:h-5" />
             Use custom template
             <input type="file" ref={customRef} className="hidden" onChange={(e) => {
                 const selectedFile = e.target.files;
