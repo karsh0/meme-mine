@@ -12,7 +12,6 @@ function App() {
       <BrowserRouter>
       <Routes>
         <Route path='/' element={<Landing/>}/>
-        <Route path='/meme' element={<MemeGenerator/>}/>
       </Routes>
       </BrowserRouter>
     </SelectedProvider>

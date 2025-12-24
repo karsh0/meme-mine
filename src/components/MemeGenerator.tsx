@@ -230,7 +230,7 @@ export const MemeGenerator = () => {
 
       const offset = getOffset();
       const touchX = touch.clientX - offset.x;
-      const touchY = touch.clientY - offset.y;
+      const touchY = touch.clientY + 10 - offset.y;
 
       let found = false;
       for (let i = texts.length - 1; i >= 0; i--) {
@@ -394,7 +394,7 @@ export const MemeGenerator = () => {
     }
   };
   return (
-    <div className="flex text-black px-4 py-2 md:py-20">
+    <div className="flex text-black px-4 py-2 md:py-20 overflow-hidden">
       <div className="flex flex-col lg:flex-row gap-10 lg:gap-20 items-center justify-center max-w-8xl mx-auto flex-wrap z-10 relative">
         <div className="flex flex-col gap-7 items-center">
           <motion.div

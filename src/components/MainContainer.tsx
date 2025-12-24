@@ -26,7 +26,7 @@ export const MainContainer = () => {
 
     return <main className="max-w-6xl mx-auto px-3 py-5 md:py-16">
         <section className="text-center px-6 py-16 md:py-20">
-            <div className="text-4xl md:text-7xl font-['poppins'] font-bold tracking-tight leading-[1.1] text-center">
+            <div className="text-4xl md:text-7xl font-['poppins'] font-extrabold md:font-bold tracking-tight leading-[1.1] text-center">
                 <span className="">Generate Memes in</span>
                 <br />
                 <span className="text-indigo-500">Seconds</span>
