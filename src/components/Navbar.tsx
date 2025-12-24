@@ -1,7 +1,8 @@
 
 export const Navbar = () => {
   return (
-    <nav className="w-full h-16 flex items-center justify-between text-xs md:text-sm font-semibold">
+    <nav className="sticky top-0 w-full h-16 flex items-center justify-between 
+text-xs md:text-sm font-semibold bg-gray-200 z-40">
       <div className="text-lg font-bold flex gap-1 items-center">
         <span className="text-zinc-800 tracking-tighter">Meme</span>
         <span className="px-3 py-[1px] bg-indigo-500 text-white rounded-lg">mine</span>
