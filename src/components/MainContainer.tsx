@@ -32,7 +32,7 @@ export const MainContainer = () => {
                 <span className="text-indigo-500">Seconds</span>
             </div>
 
-            <p className="mt-6 text-sm md:text-lg text-gray-600 max-w-xl mx-auto">
+            <p className="mt-2 md:mt-6 text-sm md:text-lg text-gray-600 max-w-xl mx-auto">
                 It’s time to create and share your humor with the world.
             </p>
 
