@@ -14,7 +14,7 @@ export const templates = {
     "cheating-coldplay":{
         image:"./temp26.jpg"
     },
-    "kiddy":{
+    "jack sparrow":{
         image:"./temp5.jpg"
     },
     "ballons":{
@@ -53,7 +53,7 @@ export const templates = {
     "obama":{
         image:"./temp17.jpg"
     },
-    "employee":{
+    "girly girls":{
         image:"./temp18.jpg"
     },
     "froggy":{
@@ -73,5 +73,20 @@ export const templates = {
     },
     "cute cat":{
         image:"./temp25.jpg"
+    },
+    "times up":{
+        image:"./temp27.jpg"
+    },
+    "domino effect":{
+        image:"./temp29.jpg"
+    },
+    "red button":{
+        image:"./temp30.jpg"
+    },
+    "couple bed":{
+        image:"./temp31.jpg"
+    },
+    "kiddy":{
+        image:"./temp32.jpg"
     }
 }

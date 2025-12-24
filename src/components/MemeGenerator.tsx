@@ -229,7 +229,7 @@ export const MemeGenerator = () => {
       if (!touch) return;
 
       const offset = getOffset();
-      const touchX = touch.clientX - offset.x;
+      const touchX = touch.clientX + 20 - offset.x;
       const touchY = touch.clientY + 10 - offset.y;
 
       let found = false;
@@ -243,6 +243,7 @@ export const MemeGenerator = () => {
 
           // Update editor style to match selected text
           const selectedText = texts[i];
+          console.log(selectedText)
           if (!selectedText) return;
           setEditorStyle({
             color: selectedText.color,
